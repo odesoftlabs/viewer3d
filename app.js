@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view');
     
-    // Remove splash smoothly
     setTimeout(() => {
         splashScreen.style.opacity = '0';
         setTimeout(() => {
@@ -26,14 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const target = item.getAttribute('data-target');
             document.getElementById(target).classList.add('active');
             
-            // Fix resize issue when switching back to canvas
             if (target === 'view-inicio' && engine.renderer) {
                 setTimeout(resizeCanvas, 10);
             }
         });
     });
 
-    // --- TRANSLATION ENGINE (Default: English) ---
+    // --- TRANSLATION ENGINE ---
     const translations = {
         en: {
             "no-model": "No model loaded into the viewport",
@@ -118,9 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function changeLanguage(lang) {
         document.querySelectorAll('[data-translate]').forEach(el => {
             const key = el.getAttribute('data-translate');
-            if (translations[lang] && translations[lang][key]) {
-                el.textContent = translations[lang][key];
-            }
+            if (translations[lang] && translations[lang][key]) el.textContent = translations[lang][key];
         });
     }
 
@@ -128,54 +124,39 @@ document.addEventListener('DOMContentLoaded', () => {
         radio.addEventListener('change', (e) => changeLanguage(e.target.value));
     });
 
-    // Theme Engine
+    // Theme & Engine Background
     document.querySelectorAll('input[name="app-theme"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            document.documentElement.setAttribute('data-theme', e.target.value);
-            // Si cambia a modo claro y el fondo 3D es oscuro, lo ajustamos sutilmente
-            if (e.target.value === 'claro' && engine.scene) {
-                 // Opción visual: forzar color claro
-            }
-        });
+        radio.addEventListener('change', (e) => document.documentElement.setAttribute('data-theme', e.target.value));
     });
 
-    const colorCircles = document.querySelectorAll('.color-circle');
-    colorCircles.forEach(circle => {
+    document.querySelectorAll('.color-circle').forEach(circle => {
         circle.addEventListener('click', () => {
-            colorCircles.forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.color-circle').forEach(c => c.classList.remove('active'));
             circle.classList.add('active');
             updateEngineBackground(circle.getAttribute('data-color'));
         });
     });
 
-
-    // --- 3D ENGINE (THREE.JS) ---
+    // --- 3D ENGINE ---
     let engine = { scene: null, camera: null, renderer: null, controls: null, grid: null, currentModel: null };
     const container = document.getElementById('canvas-container');
     const placeholder = document.getElementById('viewer-placeholder');
 
     function initEngine3D() {
         engine.scene = new THREE.Scene();
-        engine.scene.background = new THREE.Color('#1e1e1e'); // VS Code Default bg
-
-        engine.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        engine.scene.background = new THREE.Color('#1e1e1e');
+        engine.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 2000);
         engine.camera.position.set(0, 5, 10);
-
         engine.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         engine.renderer.setSize(container.clientWidth, container.clientHeight);
         engine.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        engine.renderer.shadowMap.enabled = true;
-        engine.renderer.outputEncoding = THREE.sRGBEncoding;
         container.appendChild(engine.renderer.domElement);
 
         engine.controls = new THREE.OrbitControls(engine.camera, engine.renderer.domElement);
         engine.controls.enableDamping = true;
-        engine.controls.dampingFactor = 0.05;
         engine.controls.autoRotate = true;
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        engine.scene.add(ambientLight);
-
+        engine.scene.add(new THREE.AmbientLight(0xffffff, 0.7));
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
         dirLight.position.set(5, 10, 7);
         engine.scene.add(dirLight);
@@ -189,166 +170,79 @@ document.addEventListener('DOMContentLoaded', () => {
             engine.renderer.render(engine.scene, engine.camera);
         }
         animate();
-
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
     }
 
     function resizeCanvas() {
-        if (!engine.renderer || !container) return;
+        if (!engine.renderer) return;
         engine.camera.aspect = container.clientWidth / container.clientHeight;
         engine.camera.updateProjectionMatrix();
         engine.renderer.setSize(container.clientWidth, container.clientHeight);
     }
 
-    function updateEngineBackground(hex) {
-        if (engine.scene) engine.scene.background = new THREE.Color(hex);
-    }
+    function updateEngineBackground(hex) { if (engine.scene) engine.scene.background = new THREE.Color(hex); }
 
-    document.getElementById('cfg-autorotate').addEventListener('change', (e) => {
-        if (engine.controls) engine.controls.autoRotate = e.target.checked;
-    });
+    document.getElementById('cfg-autorotate').addEventListener('change', (e) => engine.controls.autoRotate = e.target.checked);
+    document.getElementById('cfg-grid').addEventListener('change', (e) => engine.grid.visible = e.target.checked);
 
-    document.getElementById('cfg-grid').addEventListener('change', (e) => {
-        if (engine.grid) engine.grid.visible = e.target.checked;
-    });
-
-
-    // --- LOCAL FILE PARSER ---
-    const fileInput = document.getElementById('file-input');
-    const dropZone = document.getElementById('drop-zone');
-
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault(); dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length > 0) processSelectedFile(e.dataTransfer.files[0]);
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) processSelectedFile(e.target.files[0]);
-    });
-
+    // --- FILE PARSER (200MB Limit + Extended Formats) ---
     function processSelectedFile(file) {
-        const name = file.name;
-        const sizeKb = (file.size / 1024).toFixed(2);
-        const extension = name.split('.').pop().toLowerCase();
+        const MAX_SIZE = 200 * 1024 * 1024; // 200MB limit
+        if (file.size > MAX_SIZE) {
+            alert('Error: File too large. Maximum size is 200MB.');
+            return;
+        }
 
-        if (!['glb', 'gltf', 'obj'].includes(extension)) {
-            alert('Format not supported. Use .GLB, .GLTF, or .OBJ');
+        const name = file.name;
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+        const extension = name.split('.').pop().toLowerCase();
+        const supported = ['glb', 'gltf', 'obj', 'fbx', 'stl', 'dae', 'ply'];
+
+        if (!supported.includes(extension)) {
+            alert('Format not supported.');
             return;
         }
 
         document.getElementById('stat-name-val').textContent = name;
-        document.getElementById('stat-size-val').textContent = `${sizeKb} Kb`;
+        document.getElementById('stat-size-val').textContent = `${sizeMb} MB`;
         document.getElementById('stat-format-val').textContent = `.${extension.toUpperCase()}`;
         
         const currentLang = document.querySelector('input[name="app-lang"]:checked').value;
         const statusEl = document.getElementById('stat-status-val');
         statusEl.textContent = translations[currentLang]["status-loading"];
-        statusEl.style.color = "var(--accent)";
-
+        
         const readerURL = URL.createObjectURL(file);
-
         if (engine.currentModel) engine.scene.remove(engine.currentModel);
         placeholder.classList.add('hidden');
 
+        // Logic for loaders
         if (extension === 'glb' || extension === 'gltf') {
             new THREE.GLTFLoader().load(readerURL, (gltf) => {
                 engine.currentModel = gltf.scene;
                 engine.scene.add(engine.currentModel);
                 postProcessingModel(engine.currentModel, currentLang);
-            }, undefined, () => handleLoadError(currentLang));
+            });
         } else if (extension === 'obj') {
             new THREE.OBJLoader().load(readerURL, (obj) => {
                 engine.currentModel = obj;
                 engine.scene.add(engine.currentModel);
                 postProcessingModel(engine.currentModel, currentLang);
-            }, undefined, () => handleLoadError(currentLang));
+            });
         }
-
-        // Auto-redirect to 3D View
         document.querySelector('[data-target="view-inicio"]').click();
     }
 
+    // Handlers for Upload
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => { if (e.target.files.length) processSelectedFile(e.target.files[0]); });
+
     function postProcessingModel(model, lang) {
-        const statusEl = document.getElementById('stat-status-val');
-        statusEl.textContent = translations[lang]["status-ready"];
-        statusEl.style.color = "#4CAF50";
-
-        let vertices = 0, faces = 0, triangles = 0, materials = new Set(), textures = 0;
-
-        model.traverse((child) => {
-            if (child.isMesh && child.geometry) {
-                if (child.geometry.attributes.position) vertices += child.geometry.attributes.position.count;
-                if (child.geometry.index) {
-                    triangles += child.geometry.index.count / 3;
-                    faces += child.geometry.index.count / 3;
-                } else if (child.geometry.attributes.position) {
-                    triangles += child.geometry.attributes.position.count / 3;
-                    faces += child.geometry.attributes.position.count / 3;
-                }
-
-                if (child.material) {
-                    const mats = Array.isArray(child.material) ? child.material : [child.material];
-                    mats.forEach(mat => { materials.add(mat.uuid); if (mat.map) textures++; });
-                }
-            }
-        });
-
-        document.getElementById('stat-vertices-val').textContent = vertices.toLocaleString();
-        document.getElementById('stat-faces-val').textContent = Math.floor(faces).toLocaleString();
-        document.getElementById('stat-triangles-val').textContent = Math.floor(triangles).toLocaleString();
-        document.getElementById('stat-materials-val').textContent = materials.size;
-        document.getElementById('stat-textures-val').textContent = textures;
-
-        // Perfect Camera Framing
+        document.getElementById('stat-status-val').textContent = translations[lang]["status-ready"];
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        
         engine.controls.target.copy(center);
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const fov = engine.camera.fov * (Math.PI / 180);
-        let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
-        cameraZ *= 2.0; 
-
-        engine.camera.position.set(center.x, center.y + (maxDim * 0.5), center.z + cameraZ);
         engine.camera.lookAt(center);
-        engine.controls.update();
-    }
-
-    function handleLoadError(lang) {
-        const statusEl = document.getElementById('stat-status-val');
-        statusEl.textContent = translations[lang]["status-error"];
-        statusEl.style.color = "#f44336";
-        placeholder.classList.remove('hidden');
-    }
-
-    // --- PWA INSTALLATION SYSTEM ---
-    let deferredPrompt;
-    const installBtn = document.getElementById('btn-install-pwa');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installBtn.classList.remove('hidden'); // Muestra el botón en el header
-    });
-
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                installBtn.classList.add('hidden');
-            }
-            deferredPrompt = null;
-        }
-    });
-
-    // PWA Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.error("SW Reg failed:", err));
     }
 });
