@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="oscuro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Viewer3D - Odesoft Studio</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#06080f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <meta property="og:title" content="Viewer3D - Odesoft">
+    <meta property="og:description" content="Visualizador profesional de modelos 3D en tiempo real.">
+    <meta property="og:image" content="./assets/banner.png">
+    <meta property="og:type" content="website">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <img src="./assets/logo-splash.png" alt="Viewer3D Logo" class="splash-logo">
+            <div class="loading-bar-container">
+                <div class="loading-bar"></div>
+            </div>
+        </div>
+        <div class="splash-footer">Odesoft</div>
+    </div>
+
+    <div id="app-container" class="hidden">
+        
+        <header class="top-header">
+            <img src="./assets/logo-app.png" alt="Viewer3D" class="app-logo">
+        </header>
+
+        <main class="content-area">
+            
+            <section id="view-inicio" class="view active">
+                <div id="canvas-container">
+                    <div id="viewer-placeholder" class="viewer-placeholder">
+                        <i class="fas fa-cube"></i>
+                        <p data-translate="no-model">No hay ningún modelo cargado</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-subir" class="view">
+                <div class="upload-zone" id="drop-zone">
+                    <input type="file" id="file-input" accept=".gltf,.glb,.obj" class="hidden-input">
+                    <i class="fas fa-upload upload-icon"></i>
+                    <p class="upload-text" data-translate="upload-prompt">Toca o arrastra aquí para seleccionar un modelo 3D</p>
+                    <span class="upload-formats">Formatos soportados: .GLB, .GLTF, .OBJ</span>
+                </div>
+            </section>
+
+            <section id="view-estadisticas" class="view padding-view">
+                <h2 class="section-title" data-translate="stats-title">Estadísticas del Modelo</h2>
+                <hr class="divider">
+                
+                <h3 class="subsection-title" data-translate="file-info">Información del Archivo</h3>
+                <ul class="stats-list">
+                    <li><span data-translate="stat-name">Name</span> <span id="stat-name-val">None</span></li>
+                    <li><span data-translate="stat-size">File Size</span> <span id="stat-size-val">0 Kb</span></li>
+                    <li><span data-translate="stat-format">Format</span> <span id="stat-format-val">-</span></li>
+                    <li><span data-translate="stat-status">Enige Status</span> <span id="stat-status-val" data-translate="status-waiting">Esperando Archivo...</span></li>
+                </ul>
+
+                <h3 class="subsection-title mt-4" data-translate="geo-assets">Geometría y Assets</h3>
+                <ul class="stats-list">
+                    <li><span data-translate="stat-vertices">Vértices</span> <span id="stat-vertices-val">0</span></li>
+                    <li><span data-translate="stat-faces">Faces</span> <span id="stat-faces-val">0</span></li>
+                    <li><span data-translate="stat-triangles">Triángulos</span> <span id="stat-triangles-val">0</span></li>
+                    <li><span data-translate="stat-materials">Materiales</span> <span id="stat-materials-val">0</span></li>
+                    <li><span data-translate="stat-textures">Texturas</span> <span id="stat-textures-val">0</span></li>
+                </ul>
+            </section>
+
+            <section id="view-configuracion" class="view padding-view">
+                <h2 class="section-title" data-translate="config-title">Configuración</h2>
+                <hr class="divider">
+
+                <div class="config-group">
+                    <h3 class="config-title" data-translate="cfg-mode">Modo de la App</h3>
+                    <label class="custom-radio">
+                        <input type="radio" name="app-theme" value="claro"> 
+                        <span data-translate="theme-light">Claro</span>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="custom-radio">
+                        <input type="radio" name="app-theme" value="oscuro" checked> 
+                        <span data-translate="theme-dark">Oscuro</span>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                <div class="config-group">
+                    <h3 class="config-title" data-translate="cfg-lang">Idioma de la App</h3>
+                    <label class="custom-radio">
+                        <input type="radio" name="app-lang" value="es" checked> 
+                        <span data-translate="lang-es">Español</span>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label class="custom-radio">
+                        <input type="radio" name="app-lang" value="en"> 
+                        <span data-translate="lang-en">Inglés</span>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+
+                <div class="config-group">
+                    <h3 class="config-title" data-translate="cfg-addons">Configuraciones Adicionales</h3>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="cfg-autorotate" checked> 
+                        <span data-translate="opt-rotate">Rotación Automática</span>
+                        <span class="checkbox-box"></span>
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="cfg-grid" checked> 
+                        <span data-translate="opt-grid">Mostrar Cuadrícula</span>
+                        <span class="checkbox-box"></span>
+                    </label>
+                </div>
+
+                <div class="config-group">
+                    <h3 class="config-title" data-translate="cfg-bg">Fondo del Vizualisador</h3>
+                    <div class="color-picker-container">
+                        <div class="color-circle active" data-color="#06080f" style="background-color: #06080f; border: 1px solid #333;"></div>
+                        <div class="color-circle" data-color="#E2E2E2" style="background-color: #E2E2E2;"></div>
+                        <div class="color-circle" data-color="#3b82f6" style="background-color: #3b82f6;"></div>
+                        <div class="color-circle" data-color="#a3e635" style="background-color: #a3e635;"></div>
+                        <div class="color-circle gradient-bg" id="btn-custom-bg">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-group app-info">
+                    <h3 class="config-title" data-translate="cfg-info">Información del App</h3>
+                    <p data-translate="info-version">Versión: 1.0.0 Beta</p>
+                    <p data-translate="info-update">Última Actualización: 06/04/2025</p>
+                    <p data-translate="info-author">Creado por: Odesoft Studio</p>
+                </div>
+            </section>
+
+        </main>
+
+        <nav class="bottom-navbar">
+            <div class="nav-item active" data-target="view-inicio">
+                <i class="fas fa-home"></i>
+                <span data-translate="nav-home">Inicio</span>
+            </div>
+            <div class="nav-item" data-target="view-subir">
+                <i class="fas fa-upload"></i>
+                <span data-translate="nav-upload">Subir Archivo</span>
+            </div>
+            <div class="nav-item" data-target="view-estadisticas">
+                <i class="fas fa-chart-bar"></i>
+                <span data-translate="nav-stats">Estadísticas</span>
+            </div>
+            <div class="nav-item" data-target="view-configuracion">
+                <i class="fas fa-cog"></i>
+                <span data-translate="nav-config">Configuración</span>
+            </div>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
