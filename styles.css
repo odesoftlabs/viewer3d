@@ -1,354 +1,257 @@
-document.addEventListener('DOMContentLoaded', () => {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+/* --- THEME VARIABLES (VS Code Inspired) --- */
+:root {
+    --bg-main: #1e1e1e;        /* VS Code Background */
+    --bg-nav: #252526;         /* VS Code Activity Bar */
+    --bg-panel: #2d2d2d;       /* VS Code Panel */
+    --text-primary: #cccccc;   /* VS Code Text */
+    --text-secondary: #999999;
+    --text-heading: #ffffff;
+    --accent: #007acc;         /* VS Code Blue */
+    --accent-hover: #0098ff;
+    --border-color: #3e3e42;
+    --card-bg: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="claro"] {
+    --bg-main: #ffffff;
+    --bg-nav: #f3f3f3;
+    --bg-panel: #f8f8f8;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-heading: #000000;
+    --accent: #007acc;
+    --accent-hover: #005a9e;
+    --border-color: #e4e4e4;
+    --card-bg: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* --- SPLASH SCREEN --- */
+.splash-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #1e1e1e;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.splash-content { display: flex; flex-direction: column; align-items: center; width: 250px; }
+.splash-logo { width: 100%; height: auto; margin-bottom: 25px; }
+.loading-bar-container { width: 100%; height: 3px; background-color: #333; border-radius: 2px; overflow: hidden; position: relative; }
+.loading-bar { width: 40%; height: 100%; background-color: var(--accent); position: absolute; animation: loading-anim 1.5s infinite ease-in-out; }
+@keyframes loading-anim { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+.splash-footer { position: absolute; bottom: 40px; color: #666; font-size: 1rem; letter-spacing: 1px; }
+.hidden { display: none !important; }
+
+/* --- APP LAYOUT --- */
+#app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--bg-main);
+}
+
+.top-header {
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    background-color: var(--bg-nav);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 10;
+}
+.app-logo { height: 22px; }
+
+.btn-install {
+    background-color: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+.btn-install:hover { background-color: var(--accent-hover); }
+
+.content-area {
+    flex: 1;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.view {
+    display: none;
+    height: 100%;
+    width: 100%;
+    animation: fade-in 0.3s ease-out forwards;
+    opacity: 0;
+}
+.view.active { display: block; }
+@keyframes fade-in { to { opacity: 1; } }
+
+.padding-view { padding: 20px; }
+
+/* --- 3D VIEWER --- */
+#canvas-container {
+    width: 100%;
+    height: calc(100vh - 110px); /* Restando header y navbar móvil */
+    position: relative;
+    outline: none;
+}
+canvas { width: 100% !important; height: 100% !important; display: block; }
+
+.viewer-placeholder {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center;
+    color: var(--text-secondary); text-align: center; pointer-events: none;
+}
+.placeholder-icon-wrapper {
+    width: 80px; height: 80px; border-radius: 16px;
+    background-color: var(--card-bg); border: 1px solid var(--border-color);
+    display: flex; justify-content: center; align-items: center;
+    margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.placeholder-icon-wrapper i { font-size: 2.5rem; color: var(--text-secondary); }
+.viewer-placeholder p { font-size: 0.95rem; font-weight: 400; }
+
+/* --- UPLOAD ZONE --- */
+.upload-wrapper {
+    height: 100%; display: flex; justify-content: center; align-items: center; padding: 20px;
+}
+.upload-zone {
+    width: 100%; max-width: 600px; padding: 60px 20px;
+    border: 2px dashed var(--border-color); border-radius: 12px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    cursor: pointer; background-color: var(--card-bg);
+    transition: all 0.2s ease; text-align: center;
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background-color: rgba(0, 122, 204, 0.05); transform: translateY(-2px); }
+.upload-icon { font-size: 3.5rem; color: var(--accent); margin-bottom: 20px; }
+.upload-title { font-size: 1.1rem; font-weight: 500; color: var(--text-heading); margin-bottom: 8px; }
+.upload-formats { font-size: 0.85rem; color: var(--text-secondary); }
+.hidden-input { display: none; }
+
+/* --- SETTINGS & STATS PANELS (VS Code Style) --- */
+.settings-panel {
+    max-width: 800px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+.section-title { font-size: 1.5rem; font-weight: 500; color: var(--text-heading); margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+.settings-section { margin-bottom: 35px; }
+.subsection-title, .config-title { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 15px; }
+
+/* Stats List */
+.stats-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.stats-list li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 15px; background-color: var(--card-bg);
+    border-radius: 6px; font-size: 0.9rem; border: 1px solid transparent;
+}
+.stats-list li:hover { border-color: var(--border-color); }
+.status-badge { background-color: rgba(255, 255, 255, 0.1); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; }
+
+/* Radios & Checkboxes */
+.radio-group { display: flex; flex-direction: column; gap: 12px; }
+.custom-radio, .custom-checkbox {
+    display: flex; align-items: center; position: relative; padding-left: 32px;
+    cursor: pointer; font-size: 0.95rem; color: var(--text-primary); user-select: none;
+}
+.custom-radio input, .custom-checkbox input { position: absolute; opacity: 0; cursor: pointer; }
+
+/* Radio Design */
+.checkmark { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 18px; width: 18px; border: 2px solid var(--text-secondary); border-radius: 50%; transition: 0.2s; }
+.custom-radio:hover .checkmark { border-color: var(--accent); }
+.custom-radio input:checked ~ .checkmark { border-color: var(--accent); }
+.checkmark:after { content: ""; position: absolute; display: none; top: 3px; left: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.custom-radio input:checked ~ .checkmark:after { display: block; }
+
+/* Checkbox Design */
+.checkbox-box { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 18px; width: 18px; border: 2px solid var(--text-secondary); border-radius: 4px; transition: 0.2s; }
+.custom-checkbox:hover .checkbox-box { border-color: var(--accent); }
+.custom-checkbox input:checked ~ .checkbox-box { border-color: var(--accent); background-color: var(--accent); }
+.checkbox-box:after { content: ""; position: absolute; display: none; left: 5px; top: 1px; width: 4px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.custom-checkbox input:checked ~ .checkbox-box:after { display: block; }
+
+/* Colors */
+.color-picker-container { display: flex; gap: 12px; }
+.color-circle { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+.color-circle:hover { transform: translateY(-2px); }
+.color-circle.active { box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--accent); }
+
+.app-info p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; }
+
+/* --- MOBILE BOTTOM NAVBAR --- */
+.bottom-navbar {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+    background-color: var(--bg-nav); display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color); z-index: 100;
+}
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-secondary); cursor: pointer; transition: color 0.2s; width: 25%; height: 100%;
+}
+.nav-item i { font-size: 1.3rem; margin-bottom: 4px; }
+.nav-label { font-size: 0.7rem; }
+.nav-item:hover, .nav-item.active { color: var(--accent); }
+
+
+/* =========================================
+   DESKTOP OPTIMIZATION (VS CODE STYLE)
+   ========================================= */
+@media (min-width: 769px) {
+    #app-container { flex-direction: row; }
     
-    // --- APP INITIALIZATION ---
-    const splashScreen = document.getElementById('splash-screen');
-    const appContainer = document.getElementById('app-container');
-    const navItems = document.querySelectorAll('.nav-item');
-    const views = document.querySelectorAll('.view');
+    /* IDE Top Header */
+    .top-header { position: absolute; top: 0; left: 60px; width: calc(100% - 60px); height: 40px; border-bottom: 1px solid var(--border-color); }
+    .app-logo { height: 18px; }
+
+    /* IDE Activity Bar (Left Vertical Nav) */
+    .bottom-navbar {
+        position: relative; width: 60px; height: 100vh;
+        flex-direction: column; justify-content: flex-start; align-items: center;
+        border-top: none; border-right: 1px solid var(--border-color);
+        padding-top: 10px; gap: 10px; background-color: var(--bg-nav);
+    }
+    .nav-item { width: 48px; height: 48px; border-radius: 8px; flex-direction: row; margin-bottom: 5px; position: relative; }
+    .nav-label { display: none; } /* Ocultar texto en PC, usar Tooltips nativos */
+    .nav-item i { font-size: 1.5rem; margin: 0; }
     
-    // Remove splash smoothly
-    setTimeout(() => {
-        splashScreen.style.opacity = '0';
-        setTimeout(() => {
-            splashScreen.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-            initEngine3D();
-        }, 500);
-    }, 2000);
+    /* VS Code style active indicator */
+    .nav-item.active::before { content: ""; position: absolute; left: -6px; top: 10%; height: 80%; width: 3px; background-color: var(--accent); border-radius: 0 4px 4px 0; }
+    .nav-item:hover { background-color: rgba(255,255,255,0.05); }
 
-    // Navigation System
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            navItems.forEach(nav => nav.classList.remove('active'));
-            views.forEach(view => view.classList.remove('active'));
-            
-            item.classList.add('active');
-            const target = item.getAttribute('data-target');
-            document.getElementById(target).classList.add('active');
-            
-            // Fix resize issue when switching back to canvas
-            if (target === 'view-inicio' && engine.renderer) {
-                setTimeout(resizeCanvas, 10);
-            }
-        });
-    });
-
-    // --- TRANSLATION ENGINE (Default: English) ---
-    const translations = {
-        en: {
-            "no-model": "No model loaded into the viewport",
-            "upload-prompt": "Tap or drag here to select a 3D model file",
-            "stats-title": "Model Statistics",
-            "file-info": "File Information",
-            "stat-name": "Name",
-            "stat-size": "File Size",
-            "stat-format": "Format",
-            "stat-status": "Engine Status",
-            "status-waiting": "Waiting for File...",
-            "status-loading": "Processing mesh...",
-            "status-ready": "Engine Active / Rendering",
-            "status-error": "Error: Corrupted File",
-            "geo-assets": "Geometry and Assets",
-            "stat-vertices": "Vertices",
-            "stat-faces": "Faces",
-            "stat-triangles": "Triangles",
-            "stat-materials": "Materials",
-            "stat-textures": "Textures",
-            "config-title": "Settings",
-            "cfg-mode": "App Mode",
-            "theme-light": "Light",
-            "theme-dark": "Dark",
-            "cfg-lang": "App Language",
-            "lang-es": "Spanish",
-            "lang-en": "English",
-            "cfg-addons": "Additional Settings",
-            "opt-rotate": "Auto Rotation",
-            "opt-grid": "Show Grid",
-            "cfg-bg": "Viewer Background",
-            "cfg-info": "App Info",
-            "info-version": "Version: 1.0.0 Pro",
-            "info-author": "Created by: Odesoft Studio",
-            "nav-home": "Home",
-            "nav-upload": "Upload",
-            "nav-stats": "Stats",
-            "nav-config": "Settings",
-            "install-app": "Install App"
-        },
-        es: {
-            "no-model": "No hay modelo cargado en el visor",
-            "upload-prompt": "Toca o arrastra aquí para seleccionar un modelo",
-            "stats-title": "Estadísticas del Modelo",
-            "file-info": "Información del Archivo",
-            "stat-name": "Nombre",
-            "stat-size": "Peso del Archivo",
-            "stat-format": "Formato",
-            "stat-status": "Estado del Motor",
-            "status-waiting": "Esperando Archivo...",
-            "status-loading": "Procesando malla...",
-            "status-ready": "Motor Activo / Renderizando",
-            "status-error": "Error: Archivo Corrupto",
-            "geo-assets": "Geometría y Assets",
-            "stat-vertices": "Vértices",
-            "stat-faces": "Caras",
-            "stat-triangles": "Triángulos",
-            "stat-materials": "Materiales",
-            "stat-textures": "Texturas",
-            "config-title": "Configuración",
-            "cfg-mode": "Modo de la App",
-            "theme-light": "Claro",
-            "theme-dark": "Oscuro",
-            "cfg-lang": "Idioma de la App",
-            "lang-es": "Español",
-            "lang-en": "Inglés",
-            "cfg-addons": "Ajustes Adicionales",
-            "opt-rotate": "Rotación Automática",
-            "opt-grid": "Mostrar Cuadrícula",
-            "cfg-bg": "Fondo del Visor",
-            "cfg-info": "Información de la App",
-            "info-version": "Versión: 1.0.0 Pro",
-            "info-author": "Creado por: Odesoft Studio",
-            "nav-home": "Inicio",
-            "nav-upload": "Subir",
-            "nav-stats": "Datos",
-            "nav-config": "Ajustes",
-            "install-app": "Instalar App"
-        }
-    };
-
-    function changeLanguage(lang) {
-        document.querySelectorAll('[data-translate]').forEach(el => {
-            const key = el.getAttribute('data-translate');
-            if (translations[lang] && translations[lang][key]) {
-                el.textContent = translations[lang][key];
-            }
-        });
+    /* Main Area */
+    .content-area {
+        position: absolute; left: 60px; top: 40px;
+        width: calc(100% - 60px); height: calc(100vh - 40px);
+        background-color: var(--bg-main);
     }
-
-    document.querySelectorAll('input[name="app-lang"]').forEach(radio => {
-        radio.addEventListener('change', (e) => changeLanguage(e.target.value));
-    });
-
-    // Theme Engine
-    document.querySelectorAll('input[name="app-theme"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            document.documentElement.setAttribute('data-theme', e.target.value);
-            // Si cambia a modo claro y el fondo 3D es oscuro, lo ajustamos sutilmente
-            if (e.target.value === 'claro' && engine.scene) {
-                 // Opción visual: forzar color claro
-            }
-        });
-    });
-
-    const colorCircles = document.querySelectorAll('.color-circle');
-    colorCircles.forEach(circle => {
-        circle.addEventListener('click', () => {
-            colorCircles.forEach(c => c.classList.remove('active'));
-            circle.classList.add('active');
-            updateEngineBackground(circle.getAttribute('data-color'));
-        });
-    });
-
-
-    // --- 3D ENGINE (THREE.JS) ---
-    let engine = { scene: null, camera: null, renderer: null, controls: null, grid: null, currentModel: null };
-    const container = document.getElementById('canvas-container');
-    const placeholder = document.getElementById('viewer-placeholder');
-
-    function initEngine3D() {
-        engine.scene = new THREE.Scene();
-        engine.scene.background = new THREE.Color('#1e1e1e'); // VS Code Default bg
-
-        engine.camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-        engine.camera.position.set(0, 5, 10);
-
-        engine.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-        engine.renderer.setSize(container.clientWidth, container.clientHeight);
-        engine.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        engine.renderer.shadowMap.enabled = true;
-        engine.renderer.outputEncoding = THREE.sRGBEncoding;
-        container.appendChild(engine.renderer.domElement);
-
-        engine.controls = new THREE.OrbitControls(engine.camera, engine.renderer.domElement);
-        engine.controls.enableDamping = true;
-        engine.controls.dampingFactor = 0.05;
-        engine.controls.autoRotate = true;
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        engine.scene.add(ambientLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(5, 10, 7);
-        engine.scene.add(dirLight);
-
-        engine.grid = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
-        engine.scene.add(engine.grid);
-
-        function animate() {
-            requestAnimationFrame(animate);
-            engine.controls.update();
-            engine.renderer.render(engine.scene, engine.camera);
-        }
-        animate();
-
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-    }
-
-    function resizeCanvas() {
-        if (!engine.renderer || !container) return;
-        engine.camera.aspect = container.clientWidth / container.clientHeight;
-        engine.camera.updateProjectionMatrix();
-        engine.renderer.setSize(container.clientWidth, container.clientHeight);
-    }
-
-    function updateEngineBackground(hex) {
-        if (engine.scene) engine.scene.background = new THREE.Color(hex);
-    }
-
-    document.getElementById('cfg-autorotate').addEventListener('change', (e) => {
-        if (engine.controls) engine.controls.autoRotate = e.target.checked;
-    });
-
-    document.getElementById('cfg-grid').addEventListener('change', (e) => {
-        if (engine.grid) engine.grid.visible = e.target.checked;
-    });
-
-
-    // --- LOCAL FILE PARSER ---
-    const fileInput = document.getElementById('file-input');
-    const dropZone = document.getElementById('drop-zone');
-
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault(); dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length > 0) processSelectedFile(e.dataTransfer.files[0]);
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) processSelectedFile(e.target.files[0]);
-    });
-
-    function processSelectedFile(file) {
-        const name = file.name;
-        const sizeKb = (file.size / 1024).toFixed(2);
-        const extension = name.split('.').pop().toLowerCase();
-
-        if (!['glb', 'gltf', 'obj'].includes(extension)) {
-            alert('Format not supported. Use .GLB, .GLTF, or .OBJ');
-            return;
-        }
-
-        document.getElementById('stat-name-val').textContent = name;
-        document.getElementById('stat-size-val').textContent = `${sizeKb} Kb`;
-        document.getElementById('stat-format-val').textContent = `.${extension.toUpperCase()}`;
-        
-        const currentLang = document.querySelector('input[name="app-lang"]:checked').value;
-        const statusEl = document.getElementById('stat-status-val');
-        statusEl.textContent = translations[currentLang]["status-loading"];
-        statusEl.style.color = "var(--accent)";
-
-        const readerURL = URL.createObjectURL(file);
-
-        if (engine.currentModel) engine.scene.remove(engine.currentModel);
-        placeholder.classList.add('hidden');
-
-        if (extension === 'glb' || extension === 'gltf') {
-            new THREE.GLTFLoader().load(readerURL, (gltf) => {
-                engine.currentModel = gltf.scene;
-                engine.scene.add(engine.currentModel);
-                postProcessingModel(engine.currentModel, currentLang);
-            }, undefined, () => handleLoadError(currentLang));
-        } else if (extension === 'obj') {
-            new THREE.OBJLoader().load(readerURL, (obj) => {
-                engine.currentModel = obj;
-                engine.scene.add(engine.currentModel);
-                postProcessingModel(engine.currentModel, currentLang);
-            }, undefined, () => handleLoadError(currentLang));
-        }
-
-        // Auto-redirect to 3D View
-        document.querySelector('[data-target="view-inicio"]').click();
-    }
-
-    function postProcessingModel(model, lang) {
-        const statusEl = document.getElementById('stat-status-val');
-        statusEl.textContent = translations[lang]["status-ready"];
-        statusEl.style.color = "#4CAF50";
-
-        let vertices = 0, faces = 0, triangles = 0, materials = new Set(), textures = 0;
-
-        model.traverse((child) => {
-            if (child.isMesh && child.geometry) {
-                if (child.geometry.attributes.position) vertices += child.geometry.attributes.position.count;
-                if (child.geometry.index) {
-                    triangles += child.geometry.index.count / 3;
-                    faces += child.geometry.index.count / 3;
-                } else if (child.geometry.attributes.position) {
-                    triangles += child.geometry.attributes.position.count / 3;
-                    faces += child.geometry.attributes.position.count / 3;
-                }
-
-                if (child.material) {
-                    const mats = Array.isArray(child.material) ? child.material : [child.material];
-                    mats.forEach(mat => { materials.add(mat.uuid); if (mat.map) textures++; });
-                }
-            }
-        });
-
-        document.getElementById('stat-vertices-val').textContent = vertices.toLocaleString();
-        document.getElementById('stat-faces-val').textContent = Math.floor(faces).toLocaleString();
-        document.getElementById('stat-triangles-val').textContent = Math.floor(triangles).toLocaleString();
-        document.getElementById('stat-materials-val').textContent = materials.size;
-        document.getElementById('stat-textures-val').textContent = textures;
-
-        // Perfect Camera Framing
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        
-        engine.controls.target.copy(center);
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const fov = engine.camera.fov * (Math.PI / 180);
-        let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
-        cameraZ *= 2.0; 
-
-        engine.camera.position.set(center.x, center.y + (maxDim * 0.5), center.z + cameraZ);
-        engine.camera.lookAt(center);
-        engine.controls.update();
-    }
-
-    function handleLoadError(lang) {
-        const statusEl = document.getElementById('stat-status-val');
-        statusEl.textContent = translations[lang]["status-error"];
-        statusEl.style.color = "#f44336";
-        placeholder.classList.remove('hidden');
-    }
-
-    // --- PWA INSTALLATION SYSTEM ---
-    let deferredPrompt;
-    const installBtn = document.getElementById('btn-install-pwa');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installBtn.classList.remove('hidden'); // Muestra el botón en el header
-    });
-
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                installBtn.classList.add('hidden');
-            }
-            deferredPrompt = null;
-        }
-    });
-
-    // PWA Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.error("SW Reg failed:", err));
-    }
-});
+    
+    #canvas-container { height: 100%; }
+    .padding-view { padding: 40px; max-width: 900px; margin: 0 auto; }
+}
