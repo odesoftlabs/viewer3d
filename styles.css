@@ -2,13 +2,13 @@
 
 /* --- THEME VARIABLES (VS Code Inspired) --- */
 :root {
-    --bg-main: #1e1e1e;        /* VS Code Background */
-    --bg-nav: #252526;         /* VS Code Activity Bar */
-    --bg-panel: #2d2d2d;       /* VS Code Panel */
-    --text-primary: #cccccc;   /* VS Code Text */
+    --bg-main: #1e1e1e;
+    --bg-nav: #252526;
+    --bg-panel: #2d2d2d;
+    --text-primary: #cccccc;
     --text-secondary: #999999;
     --text-heading: #ffffff;
-    --accent: #007acc;         /* VS Code Blue */
+    --accent: #007acc;
     --accent-hover: #0098ff;
     --border-color: #3e3e42;
     --card-bg: rgba(255, 255, 255, 0.04);
@@ -27,31 +27,12 @@
     --card-bg: #ffffff;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
 
-body {
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-}
+body { background-color: var(--bg-main); color: var(--text-primary); overflow: hidden; position: fixed; width: 100%; height: 100%; }
 
 /* --- SPLASH SCREEN --- */
-.splash-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: #1e1e1e;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    z-index: 9999;
-    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
+.splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1e1e1e; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 .splash-content { display: flex; flex-direction: column; align-items: center; width: 250px; }
 .splash-logo { width: 100%; height: auto; margin-bottom: 25px; }
 .loading-bar-container { width: 100%; height: 3px; background-color: #333; border-radius: 2px; overflow: hidden; position: relative; }
@@ -61,197 +42,79 @@ body {
 .hidden { display: none !important; }
 
 /* --- APP LAYOUT --- */
-#app-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    width: 100vw;
-    background-color: var(--bg-main);
-}
-
-.top-header {
-    height: 50px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    background-color: var(--bg-nav);
-    border-bottom: 1px solid var(--border-color);
-    z-index: 10;
-}
+#app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; background-color: var(--bg-main); }
+.top-header { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background-color: var(--bg-nav); border-bottom: 1px solid var(--border-color); z-index: 10; }
 .app-logo { height: 22px; }
-
-.btn-install {
-    background-color: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.2s;
-}
+.btn-install { background-color: var(--accent); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
 .btn-install:hover { background-color: var(--accent-hover); }
 
-.content-area {
-    flex: 1;
-    position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
+/* --- CONTENT AREA (SCROLL FIX) --- */
+.content-area { flex: 1; position: relative; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 
-.view {
-    display: none;
-    height: 100%;
-    width: 100%;
-    animation: fade-in 0.3s ease-out forwards;
-    opacity: 0;
-}
+.view { display: none; height: 100%; width: 100%; animation: fade-in 0.3s ease-out forwards; opacity: 0; }
 .view.active { display: block; }
 @keyframes fade-in { to { opacity: 1; } }
 
 .padding-view { padding: 20px; }
 
 /* --- 3D VIEWER --- */
-#canvas-container {
-    width: 100%;
-    height: calc(100vh - 110px); /* Restando header y navbar móvil */
-    position: relative;
-    outline: none;
-}
+#canvas-container { width: 100%; height: calc(100vh - 110px); position: relative; outline: none; }
 canvas { width: 100% !important; height: 100% !important; display: block; }
-
-.viewer-placeholder {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    display: flex; flex-direction: column; align-items: center;
-    color: var(--text-secondary); text-align: center; pointer-events: none;
-}
-.placeholder-icon-wrapper {
-    width: 80px; height: 80px; border-radius: 16px;
-    background-color: var(--card-bg); border: 1px solid var(--border-color);
-    display: flex; justify-content: center; align-items: center;
-    margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
+.viewer-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); text-align: center; pointer-events: none; }
+.placeholder-icon-wrapper { width: 80px; height: 80px; border-radius: 16px; background-color: var(--card-bg); border: 1px solid var(--border-color); display: flex; justify-content: center; align-items: center; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
 .placeholder-icon-wrapper i { font-size: 2.5rem; color: var(--text-secondary); }
 .viewer-placeholder p { font-size: 0.95rem; font-weight: 400; }
 
 /* --- UPLOAD ZONE --- */
-.upload-wrapper {
-    height: 100%; display: flex; justify-content: center; align-items: center; padding: 20px;
-}
-.upload-zone {
-    width: 100%; max-width: 600px; padding: 60px 20px;
-    border: 2px dashed var(--border-color); border-radius: 12px;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    cursor: pointer; background-color: var(--card-bg);
-    transition: all 0.2s ease; text-align: center;
-}
+.upload-wrapper { height: 100%; display: flex; justify-content: center; align-items: center; padding: 20px; }
+.upload-zone { width: 100%; max-width: 600px; padding: 60px 20px; border: 2px dashed var(--border-color); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; background-color: var(--card-bg); transition: all 0.2s ease; text-align: center; }
 .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background-color: rgba(0, 122, 204, 0.05); transform: translateY(-2px); }
 .upload-icon { font-size: 3.5rem; color: var(--accent); margin-bottom: 20px; }
 .upload-title { font-size: 1.1rem; font-weight: 500; color: var(--text-heading); margin-bottom: 8px; }
 .upload-formats { font-size: 0.85rem; color: var(--text-secondary); }
 .hidden-input { display: none; }
 
-/* --- SETTINGS & STATS PANELS (VS Code Style) --- */
-.settings-panel {
-    max-width: 800px;
-    margin: 0 auto;
-    padding-bottom: 40px;
-}
+/* --- SETTINGS & STATS PANELS (VS CODE STYLE) --- */
+.settings-panel { max-width: 800px; margin: 0 auto; padding-bottom: 120px; }
 .section-title { font-size: 1.5rem; font-weight: 500; color: var(--text-heading); margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
 .settings-section { margin-bottom: 35px; }
 .subsection-title, .config-title { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 15px; }
-
-/* Stats List */
 .stats-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.stats-list li {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 15px; background-color: var(--card-bg);
-    border-radius: 6px; font-size: 0.9rem; border: 1px solid transparent;
-}
-.stats-list li:hover { border-color: var(--border-color); }
+.stats-list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background-color: var(--card-bg); border-radius: 6px; font-size: 0.9rem; border: 1px solid transparent; }
 .status-badge { background-color: rgba(255, 255, 255, 0.1); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; }
 
-/* Radios & Checkboxes */
+/* Forms */
 .radio-group { display: flex; flex-direction: column; gap: 12px; }
-.custom-radio, .custom-checkbox {
-    display: flex; align-items: center; position: relative; padding-left: 32px;
-    cursor: pointer; font-size: 0.95rem; color: var(--text-primary); user-select: none;
-}
+.custom-radio, .custom-checkbox { display: flex; align-items: center; position: relative; padding-left: 32px; cursor: pointer; font-size: 0.95rem; color: var(--text-primary); user-select: none; }
 .custom-radio input, .custom-checkbox input { position: absolute; opacity: 0; cursor: pointer; }
-
-/* Radio Design */
 .checkmark { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 18px; width: 18px; border: 2px solid var(--text-secondary); border-radius: 50%; transition: 0.2s; }
-.custom-radio:hover .checkmark { border-color: var(--accent); }
 .custom-radio input:checked ~ .checkmark { border-color: var(--accent); }
 .checkmark:after { content: ""; position: absolute; display: none; top: 3px; left: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 .custom-radio input:checked ~ .checkmark:after { display: block; }
-
-/* Checkbox Design */
 .checkbox-box { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 18px; width: 18px; border: 2px solid var(--text-secondary); border-radius: 4px; transition: 0.2s; }
-.custom-checkbox:hover .checkbox-box { border-color: var(--accent); }
 .custom-checkbox input:checked ~ .checkbox-box { border-color: var(--accent); background-color: var(--accent); }
 .checkbox-box:after { content: ""; position: absolute; display: none; left: 5px; top: 1px; width: 4px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .custom-checkbox input:checked ~ .checkbox-box:after { display: block; }
-
-/* Colors */
 .color-picker-container { display: flex; gap: 12px; }
-.color-circle { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-.color-circle:hover { transform: translateY(-2px); }
+.color-circle { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
 .color-circle.active { box-shadow: 0 0 0 2px var(--bg-main), 0 0 0 4px var(--accent); }
-
 .app-info p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px; }
 
-/* --- MOBILE BOTTOM NAVBAR --- */
-.bottom-navbar {
-    position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
-    background-color: var(--bg-nav); display: flex; justify-content: space-around; align-items: center;
-    border-top: 1px solid var(--border-color); z-index: 100;
-}
-.nav-item {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: var(--text-secondary); cursor: pointer; transition: color 0.2s; width: 25%; height: 100%;
-}
+/* --- NAVIGATION --- */
+.bottom-navbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background-color: var(--bg-nav); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); z-index: 100; }
+.nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); cursor: pointer; transition: color 0.2s; width: 25%; height: 100%; }
 .nav-item i { font-size: 1.3rem; margin-bottom: 4px; }
 .nav-label { font-size: 0.7rem; }
 .nav-item:hover, .nav-item.active { color: var(--accent); }
 
-
-/* =========================================
-   DESKTOP OPTIMIZATION (VS CODE STYLE)
-   ========================================= */
+/* --- DESKTOP OPTIMIZATION --- */
 @media (min-width: 769px) {
     #app-container { flex-direction: row; }
-    
-    /* IDE Top Header */
     .top-header { position: absolute; top: 0; left: 60px; width: calc(100% - 60px); height: 40px; border-bottom: 1px solid var(--border-color); }
-    .app-logo { height: 18px; }
-
-    /* IDE Activity Bar (Left Vertical Nav) */
-    .bottom-navbar {
-        position: relative; width: 60px; height: 100vh;
-        flex-direction: column; justify-content: flex-start; align-items: center;
-        border-top: none; border-right: 1px solid var(--border-color);
-        padding-top: 10px; gap: 10px; background-color: var(--bg-nav);
-    }
-    .nav-item { width: 48px; height: 48px; border-radius: 8px; flex-direction: row; margin-bottom: 5px; position: relative; }
-    .nav-label { display: none; } /* Ocultar texto en PC, usar Tooltips nativos */
-    .nav-item i { font-size: 1.5rem; margin: 0; }
-    
-    /* VS Code style active indicator */
-    .nav-item.active::before { content: ""; position: absolute; left: -6px; top: 10%; height: 80%; width: 3px; background-color: var(--accent); border-radius: 0 4px 4px 0; }
-    .nav-item:hover { background-color: rgba(255,255,255,0.05); }
-
-    /* Main Area */
-    .content-area {
-        position: absolute; left: 60px; top: 40px;
-        width: calc(100% - 60px); height: calc(100vh - 40px);
-        background-color: var(--bg-main);
-    }
-    
-    #canvas-container { height: 100%; }
-    .padding-view { padding: 40px; max-width: 900px; margin: 0 auto; }
+    .bottom-navbar { position: relative; width: 60px; height: 100vh; flex-direction: column; justify-content: flex-start; border-top: none; border-right: 1px solid var(--border-color); padding-top: 10px; }
+    .nav-item { width: 48px; height: 48px; border-radius: 8px; flex-direction: row; margin-bottom: 5px; }
+    .nav-label { display: none; }
+    .nav-item.active::before { content: ""; position: absolute; left: -6px; top: 10%; height: 80%; width: 3px; background-color: var(--accent); }
+    .content-area { position: absolute; left: 60px; top: 40px; width: calc(100% - 60px); height: calc(100vh - 40px); }
+    .padding-view { padding: 40px; max-width: 1000px; margin: 0; }
 }
