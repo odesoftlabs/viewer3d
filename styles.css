@@ -1,0 +1,311 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+/* Configuración de Variables Globales de Tema */
+:root {
+    --bg-main: #06080f;
+    --bg-nav: #12141d;
+    --text-primary: #ffffff;
+    --text-secondary: #aaaaaa;
+    --text-muted: #666666;
+    --accent: #3b82f6;
+    --border-color: #222222;
+    --card-bg: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="claro"] {
+    --bg-main: #f4f6f9;
+    --bg-nav: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent: #2563eb;
+    --border-color: #e2e8f0;
+    --card-bg: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* --- SPLASH SCREEN --- */
+.splash-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #06080f;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 65%;
+    max-width: 280px;
+}
+
+.splash-logo {
+    width: 100%;
+    height: auto;
+    margin-bottom: 25px;
+}
+
+.loading-bar-container {
+    width: 100%;
+    height: 3px;
+    background-color: #1e293b;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.loading-bar {
+    width: 45%;
+    height: 100%;
+    background-color: #3b82f6;
+    position: absolute;
+    animation: infinite-loading 1.8s infinite ease-in-out;
+}
+
+@keyframes infinite-loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
+}
+
+.splash-footer {
+    position: absolute;
+    bottom: 50px;
+    color: #475569;
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.hidden { display: none !important; }
+
+/* --- CONTENEDOR APP --- */
+#app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+}
+
+.top-header {
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-main);
+    z-index: 10;
+}
+
+.app-logo { height: 26px; }
+
+.content-area {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+}
+
+.view {
+    display: none;
+    height: 100%;
+    width: 100%;
+    animation: view-fade 0.25s ease-out;
+}
+
+.view.active { display: block; }
+
+.padding-view { padding: 24px; max-width: 800px; margin: 0 auto; }
+
+@keyframes view-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- VISOR 3D (CANVAS) --- */
+#canvas-container {
+    width: 100%;
+    height: calc(100vh - 125px);
+    position: relative;
+    outline: none;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+.viewer-placeholder {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-muted);
+    text-align: center;
+    pointer-events: none;
+}
+
+.viewer-placeholder i { font-size: 3.5rem; margin-bottom: 15px; }
+
+/* --- INTERFAZ DE SUBIDA --- */
+.upload-zone {
+    height: calc(100vh - 165px);
+    margin: 20px;
+    border: 2px dashed var(--border-color);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background-color: var(--card-bg);
+    transition: background-color 0.3s, border-color 0.3s;
+    padding: 20px;
+    text-align: center;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background-color: rgba(59, 130, 246, 0.04);
+}
+
+.upload-icon { font-size: 3.5rem; color: var(--accent); margin-bottom: 20px; }
+.upload-text { font-size: 1.05rem; font-weight: 400; color: var(--text-primary); margin-bottom: 8px; }
+.upload-formats { font-size: 0.8rem; color: var(--text-muted); }
+.hidden-input { display: none; }
+
+/* --- ESTADÍSTICAS --- */
+.section-title { font-size: 1.4rem; font-weight: 500; margin-bottom: 12px; color: var(--text-primary); }
+.divider { border: 0; height: 1px; background-color: var(--border-color); margin-bottom: 24px; }
+.subsection-title { font-size: 1.05rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 14px; }
+.mt-4 { margin-top: 32px; }
+
+.stats-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.stats-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    border: 1px solid var(--border-color);
+}
+.stats-list li span:first-child { color: var(--text-secondary); }
+.stats-list li span:last-child { color: var(--text-primary); font-weight: 500; }
+
+/* --- CONFIGURACIONES --- */
+.config-group { margin-bottom: 28px; }
+.config-title { font-size: 1.05rem; font-weight: 500; margin-bottom: 14px; color: var(--text-secondary); }
+
+/* Custom Radio & Checkbox Elements */
+.custom-radio, .custom-checkbox {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 34px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+.custom-radio input, .custom-checkbox input { position: absolute; opacity: 0; cursor: pointer; }
+
+/* Apariencia Radio */
+.checkmark {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    height: 20px; width: 20px; border: 2px solid var(--border-color); border-radius: 50%;
+}
+.custom-radio input:checked ~ .checkmark { border-color: var(--accent); }
+.checkmark:after {
+    content: ""; position: absolute; display: none;
+    top: 4px; left: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+.custom-radio input:checked ~ .checkmark:after { display: block; }
+
+/* Apariencia Checkbox */
+.checkbox-box {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    height: 20px; width: 20px; border: 2px solid var(--border-color); border-radius: 4px;
+}
+.custom-checkbox input:checked ~ .checkbox-box { border-color: var(--accent); background-color: var(--accent); }
+.checkbox-box:after {
+    content: ""; position: absolute; display: none;
+    left: 6px; top: 2px; width: 4px; height: 9px;
+    border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.custom-checkbox input:checked ~ .checkbox-box:after { display: block; }
+.custom-radio input:checked ~ span, .custom-checkbox input:checked ~ span { color: var(--text-primary); }
+
+/* Color Pickers */
+.color-picker-container { display: flex; gap: 16px; margin-top: 6px; }
+.color-circle {
+    width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+    position: relative; transition: transform 0.2s;
+}
+.color-circle.active { transform: scale(1.15); box-shadow: 0 0 0 2px var(--accent); }
+.gradient-bg {
+    background: linear-gradient(135deg, #a855f7, #f59e0b);
+    display: flex; justify-content: center; align-items: center; color: white; font-size: 0.9rem;
+}
+
+.app-info p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; user-select: text; }
+
+/* --- NAVIGATION BAR --- */
+.bottom-navbar {
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 65px;
+    background-color: var(--bg-nav);
+    display: flex; justify-content: space-around; align-items: center;
+    border-top: 1px solid var(--border-color);
+    z-index: 100;
+}
+.nav-item {
+    display: flex; flex-direction: column; align-items: center;
+    color: var(--text-muted); font-size: 0.72rem; cursor: pointer;
+    transition: color 0.2s; width: 22%; text-align: center;
+}
+.nav-item i { font-size: 1.4rem; margin-bottom: 5px; }
+.nav-item.active { color: var(--accent); }
+
+/* --- RESPONSIVIDAD PC --- */
+@media (min-width: 769px) {
+    #app-container { flex-direction: row-reverse; }
+    .bottom-navbar {
+        width: 80px; height: 100vh; top: 0; left: 0; bottom: auto;
+        flex-direction: column; justify-content: center; gap: 40px;
+        border-top: 0; border-right: 1px solid var(--border-color);
+    }
+    .top-header {
+        position: fixed; top: 0; right: 0; width: calc(100% - 80px);
+        border-bottom: 1px solid var(--border-color);
+    }
+    .content-area {
+        margin-left: 80px; margin-top: 60px; height: calc(100vh - 60px);
+    }
+    #canvas-container { height: calc(100vh - 60px); }
+    .upload-zone { height: calc(100vh - 120px); }
+}
