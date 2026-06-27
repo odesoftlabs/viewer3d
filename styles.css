@@ -1,197 +1,744 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="oscuro">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Viewer3D - Odesoft Studio</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e1e1e">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <meta property="og:title" content="Viewer3D - Odesoft">
-    <meta property="og:description" content="Professional Real-Time 3D Model Viewer.">
-    <meta property="og:image" content="./assets/banner.png">
-    <meta property="og:type" content="website">
+/* ============================================================
+   Viewer3D — Odesoft Studio
+   Responsive stylesheet (mobile-first)
+   ============================================================ */
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+/* ── Reset & base ─────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
 
-    <div id="splash-screen" class="splash-screen">
-        <div class="splash-content">
-            <img src="./assets/logo-splash.png" alt="Viewer3D Logo" class="splash-logo">
-            <div class="loading-bar-container">
-                <div class="loading-bar"></div>
-            </div>
-        </div>
-        <div class="splash-footer">Odesoft</div>
-    </div>
+/* ── CSS Custom Properties (themes) ──────────────────────── */
+:root,
+[data-theme="oscuro"] {
+    --bg-primary:    #1e1e1e;
+    --bg-secondary:  #252526;
+    --bg-tertiary:   #2d2d2d;
+    --bg-card:       #333333;
+    --border-color:  #444444;
+    --text-primary:  #e0e0e0;
+    --text-secondary:#a0a0a0;
+    --accent:        #007acc;
+    --accent-hover:  #005f9e;
+    --nav-bg:        #252526;
+    --nav-active:    #007acc;
+    --header-bg:     #1e1e1e;
+    --header-border: #333333;
+    --splash-bg:     #06080f;
+    --shadow:        rgba(0, 0, 0, 0.5);
+    --upload-border: #555555;
+    --upload-hover:  #007acc;
+    --status-bg:     #1a3a1a;
+    --status-color:  #4caf50;
+}
 
-    <div id="app-container" class="hidden">
-        
-        <header class="top-header">
-            <div class="header-left">
-                <img src="./assets/logo-app.png" alt="Viewer3D" class="app-logo">
-            </div>
-            <div class="header-right">
-                <button id="btn-install-pwa" class="btn-install hidden">
-                    <i class="fas fa-download"></i> <span data-translate="install-app">Install App</span>
-                </button>
-            </div>
-        </header>
+[data-theme="claro"] {
+    --bg-primary:    #f5f5f5;
+    --bg-secondary:  #ffffff;
+    --bg-tertiary:   #eeeeee;
+    --bg-card:       #ffffff;
+    --border-color:  #dddddd;
+    --text-primary:  #1a1a1a;
+    --text-secondary:#666666;
+    --accent:        #007acc;
+    --accent-hover:  #005f9e;
+    --nav-bg:        #ffffff;
+    --nav-active:    #007acc;
+    --header-bg:     #ffffff;
+    --header-border: #dddddd;
+    --splash-bg:     #06080f;
+    --shadow:        rgba(0, 0, 0, 0.15);
+    --upload-border: #cccccc;
+    --upload-hover:  #007acc;
+    --status-bg:     #e8f5e9;
+    --status-color:  #2e7d32;
+}
 
-        <main class="content-area">
-            
-            <section id="view-inicio" class="view active">
-                <div id="canvas-container">
-                    <div id="viewer-placeholder" class="viewer-placeholder">
-                        <div class="placeholder-icon-wrapper">
-                            <i class="fas fa-cube"></i>
-                        </div>
-                        <p data-translate="no-model">No model loaded into the viewport</p>
-                    </div>
-                </div>
-            </section>
+/* ── Utility ──────────────────────────────────────────────── */
+.hidden { display: none !important; }
 
-            <section id="view-subir" class="view">
-                <div class="upload-wrapper">
-                    <div class="upload-zone" id="drop-zone">
-                        <input type="file" id="file-input" accept=".gltf,.glb,.obj,.fbx,.stl,.dae,.ply" class="hidden-input">
-                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                        <h3 class="upload-title" data-translate="upload-prompt">Tap or drag here to select a 3D model file</h3>
-                        <span class="upload-formats">Supported formats: .GLB, .GLTF, .OBJ, .FBX, .STL, .DAE, .PLY</span>
-                    </div>
-                </div>
-            </section>
+/* ── Splash Screen ────────────────────────────────────────── */
+.splash-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--splash-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
 
-            <section id="view-estadisticas" class="view padding-view">
-                <div class="settings-panel">
-                    <h2 class="section-title" data-translate="stats-title">Model Statistics</h2>
-                    
-                    <div class="settings-section">
-                        <h3 class="subsection-title" data-translate="file-info">File Information</h3>
-                        <ul class="stats-list">
-                            <li><span data-translate="stat-name">Name</span> <span id="stat-name-val">None</span></li>
-                            <li><span data-translate="stat-size">File Size</span> <span id="stat-size-val">0 Kb</span></li>
-                            <li><span data-translate="stat-format">Format</span> <span id="stat-format-val">-</span></li>
-                            <li><span data-translate="stat-status">Engine Status</span> <span id="stat-status-val" class="status-badge" data-translate="status-waiting">Waiting for File...</span></li>
-                        </ul>
-                    </div>
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem;
+}
 
-                    <div class="settings-section">
-                        <h3 class="subsection-title" data-translate="geo-assets">Geometry and Assets</h3>
-                        <ul class="stats-list">
-                            <li><span data-translate="stat-vertices">Vertices</span> <span id="stat-vertices-val">0</span></li>
-                            <li><span data-translate="stat-faces">Faces</span> <span id="stat-faces-val">0</span></li>
-                            <li><span data-translate="stat-triangles">Triangles</span> <span id="stat-triangles-val">0</span></li>
-                            <li><span data-translate="stat-materials">Materials</span> <span id="stat-materials-val">0</span></li>
-                            <li><span data-translate="stat-textures">Textures</span> <span id="stat-textures-val">0</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
+.splash-logo {
+    width: clamp(100px, 40vw, 180px);
+    height: auto;
+    object-fit: contain;
+}
 
-            <section id="view-configuracion" class="view padding-view">
-                <div class="settings-panel">
-                    <h2 class="section-title" data-translate="config-title">Settings</h2>
+.loading-bar-container {
+    width: clamp(160px, 60vw, 280px);
+    height: 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    overflow: hidden;
+}
 
-                    <div class="settings-section">
-                        <h3 class="config-title" data-translate="cfg-mode">App Mode</h3>
-                        <div class="radio-group">
-                            <label class="custom-radio">
-                                <input type="radio" name="app-theme" value="claro"> 
-                                <span data-translate="theme-light">Light</span>
-                                <span class="checkmark"></span>
-                            </label>
-                            <label class="custom-radio">
-                                <input type="radio" name="app-theme" value="oscuro" checked> 
-                                <span data-translate="theme-dark">Dark</span>
-                                <span class="checkmark"></span>
-                            </label>
-                        </div>
-                    </div>
+.loading-bar {
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: loadProgress 1.8s ease-in-out forwards;
+}
 
-                    <div class="settings-section">
-                        <h3 class="config-title" data-translate="cfg-lang">App Language</h3>
-                        <div class="radio-group">
-                            <label class="custom-radio">
-                                <input type="radio" name="app-lang" value="en" checked> 
-                                <span data-translate="lang-en">English</span>
-                                <span class="checkmark"></span>
-                            </label>
-                            <label class="custom-radio">
-                                <input type="radio" name="app-lang" value="es"> 
-                                <span data-translate="lang-es">Spanish</span>
-                                <span class="checkmark"></span>
-                            </label>
-                        </div>
-                    </div>
+@keyframes loadProgress {
+    0%   { width: 0; }
+    60%  { width: 75%; }
+    100% { width: 100%; }
+}
 
-                    <div class="settings-section">
-                        <h3 class="config-title" data-translate="cfg-addons">Additional Settings</h3>
-                        <div class="radio-group">
-                            <label class="custom-checkbox">
-                                <input type="checkbox" id="cfg-autorotate" checked> 
-                                <span data-translate="opt-rotate">Auto Rotation</span>
-                                <span class="checkbox-box"></span>
-                            </label>
-                            <label class="custom-checkbox">
-                                <input type="checkbox" id="cfg-grid" checked> 
-                                <span data-translate="opt-grid">Show Grid</span>
-                                <span class="checkbox-box"></span>
-                            </label>
-                        </div>
-                    </div>
+.splash-footer {
+    position: absolute;
+    bottom: 1.5rem;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.35);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
 
-                    <div class="settings-section">
-                        <h3 class="config-title" data-translate="cfg-bg">Viewer Background</h3>
-                        <div class="color-picker-container">
-                            <div class="color-circle active" data-color="#1e1e1e" style="background-color: #1e1e1e; border: 1px solid #444;"></div>
-                            <div class="color-circle" data-color="#E2E2E2" style="background-color: #E2E2E2;"></div>
-                            <div class="color-circle" data-color="#007acc" style="background-color: #007acc;"></div>
-                            <div class="color-circle" data-color="#4CAF50" style="background-color: #4CAF50;"></div>
-                        </div>
-                    </div>
+/* ── App Shell ────────────────────────────────────────────── */
+#app-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+}
 
-                    <div class="settings-section app-info">
-                        <h3 class="config-title" data-translate="cfg-info">App Info</h3>
-                        <p data-translate="info-version">Version: 1.0.0 Pro</p>
-                        <p data-translate="info-author">Created by: Odesoft Studio</p>
-                    </div>
-                </div>
-            </section>
+/* ── Top Header ───────────────────────────────────────────── */
+.top-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    padding: 0 1rem;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--header-border);
+    z-index: 100;
+}
 
-        </main>
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
-        <nav class="bottom-navbar">
-            <div class="nav-item active" data-target="view-inicio" title="Home">
-                <i class="fas fa-cube"></i>
-                <span class="nav-label" data-translate="nav-home">Home</span>
-            </div>
-            <div class="nav-item" data-target="view-subir" title="Upload">
-                <i class="fas fa-file-import"></i>
-                <span class="nav-label" data-translate="nav-upload">Upload</span>
-            </div>
-            <div class="nav-item" data-target="view-estadisticas" title="Stats">
-                <i class="fas fa-chart-pie"></i>
-                <span class="nav-label" data-translate="nav-stats">Stats</span>
-            </div>
-            <div class="nav-item" data-target="view-configuracion" title="Settings">
-                <i class="fas fa-cog"></i>
-                <span class="nav-label" data-translate="nav-config">Settings</span>
-            </div>
-        </nav>
-    </div>
+.app-logo {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+}
 
-    <script src="app.js"></script>
-</body>
-</html>
+/* PWA install button */
+.btn-install {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    min-height: 36px;
+    transition: background 0.2s;
+}
+
+.btn-install:hover,
+.btn-install:focus-visible {
+    background: var(--accent-hover);
+    outline: none;
+}
+
+/* ── Content Area ─────────────────────────────────────────── */
+.content-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0; /* critical for flex children */
+}
+
+/* ── Views ────────────────────────────────────────────────── */
+.view {
+    display: none;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.view.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Scrollable views (stats, settings) */
+.padding-view {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 1rem;
+}
+
+/* ── 3D Canvas Container ──────────────────────────────────── */
+#canvas-container {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-primary);
+}
+
+#canvas-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    touch-action: none; /* allow Three.js OrbitControls to handle touch */
+}
+
+/* ── Viewer Placeholder ───────────────────────────────────── */
+.viewer-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: var(--text-secondary);
+    pointer-events: none;
+    padding: 1rem;
+    text-align: center;
+}
+
+.placeholder-icon-wrapper {
+    width: clamp(60px, 15vw, 90px);
+    height: clamp(60px, 15vw, 90px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: 50%;
+    border: 2px dashed var(--border-color);
+}
+
+.placeholder-icon-wrapper i {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    color: var(--text-secondary);
+}
+
+.viewer-placeholder p {
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    max-width: 260px;
+}
+
+/* ── Upload View ──────────────────────────────────────────── */
+.upload-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    overflow: hidden;
+}
+
+.upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    width: 100%;
+    max-width: 480px;
+    min-height: 220px;
+    padding: 2rem 1.5rem;
+    border: 2px dashed var(--upload-border);
+    border-radius: 16px;
+    background: var(--bg-secondary);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.upload-zone:hover,
+.upload-zone:focus-within,
+.upload-zone.drag-over {
+    border-color: var(--upload-hover);
+    background: var(--bg-tertiary);
+}
+
+.hidden-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.upload-icon {
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    color: var(--accent);
+}
+
+.upload-title {
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.upload-formats {
+    font-size: clamp(0.7rem, 2vw, 0.8rem);
+    color: var(--text-secondary);
+}
+
+/* ── Settings Panel ───────────────────────────────────────── */
+.settings-panel {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.section-title {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 0.25rem;
+}
+
+.settings-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.subsection-title,
+.config-title {
+    font-size: clamp(0.8rem, 2.2vw, 0.95rem);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ── Stats List ───────────────────────────────────────────── */
+.stats-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.stats-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--bg-tertiary);
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.stats-list li:last-child {
+    border-bottom: none;
+}
+
+.stats-list li span:last-child {
+    color: var(--text-secondary);
+    text-align: right;
+    word-break: break-all;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--status-bg);
+    color: var(--status-color);
+}
+
+/* ── Radio & Checkbox Controls ────────────────────────────── */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.custom-radio,
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    font-size: clamp(0.85rem, 2.2vw, 0.95rem);
+    color: var(--text-primary);
+    min-height: 44px; /* touch-friendly */
+    padding: 0.25rem 0;
+    position: relative;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.custom-radio input[type="radio"],
+.custom-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Custom radio dot */
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    background: var(--bg-tertiary);
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color 0.2s;
+    order: -1;
+}
+
+.custom-radio input[type="radio"]:checked ~ .checkmark {
+    border-color: var(--accent);
+}
+
+.custom-radio input[type="radio"]:checked ~ .checkmark::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+/* Custom checkbox */
+.checkbox-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 2px solid var(--border-color);
+    background: var(--bg-tertiary);
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color 0.2s, background 0.2s;
+    order: -1;
+}
+
+.custom-checkbox input[type="checkbox"]:checked ~ .checkbox-box {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+.custom-checkbox input[type="checkbox"]:checked ~ .checkbox-box::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 8px;
+    height: 12px;
+    border: 2px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+}
+
+/* ── Color Picker ─────────────────────────────────────────── */
+.color-picker-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.color-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+}
+
+.color-circle:hover {
+    transform: scale(1.15);
+}
+
+.color-circle.active {
+    border-color: var(--accent);
+    transform: scale(1.1);
+}
+
+/* ── App Info ─────────────────────────────────────────────── */
+.app-info p {
+    font-size: clamp(0.78rem, 2vw, 0.875rem);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ── Bottom Navigation Bar ────────────────────────────────── */
+.bottom-navbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: stretch;
+    background: var(--nav-bg);
+    border-top: 1px solid var(--border-color);
+    height: 60px;
+    z-index: 100;
+    /* Safe area for notched phones */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s, background 0.15s;
+    min-width: 0;
+    padding: 0.25rem 0.25rem;
+    border-radius: 0;
+    -webkit-user-select: none;
+    user-select: none;
+    /* Ensure touch target is at least 44px */
+    min-height: 44px;
+}
+
+.nav-item:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.nav-item.active {
+    color: var(--nav-active);
+}
+
+.nav-item i {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.nav-label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1;
+}
+
+/* ── Drag-over state ──────────────────────────────────────── */
+body.drag-active .upload-zone {
+    border-color: var(--upload-hover);
+    background: var(--bg-tertiary);
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* ── Tablet (≥ 768px) ─────────────────────────────────────── */
+@media (min-width: 768px) {
+    .top-header {
+        height: 58px;
+        padding: 0 1.5rem;
+    }
+
+    .app-logo {
+        height: 32px;
+    }
+
+    .btn-install {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .padding-view {
+        padding: 1.5rem;
+    }
+
+    .upload-zone {
+        min-height: 280px;
+        padding: 2.5rem 2rem;
+    }
+
+    .settings-section {
+        padding: 1rem 1.25rem;
+    }
+
+    .bottom-navbar {
+        height: 64px;
+    }
+
+    .nav-item i {
+        font-size: 1.3rem;
+    }
+
+    .nav-label {
+        font-size: 0.7rem;
+    }
+
+    .color-circle {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* ── Desktop (≥ 1024px) ───────────────────────────────────── */
+@media (min-width: 1024px) {
+    .top-header {
+        height: 60px;
+        padding: 0 2rem;
+    }
+
+    .app-logo {
+        height: 36px;
+    }
+
+    .padding-view {
+        padding: 2rem;
+    }
+
+    .upload-zone {
+        min-height: 320px;
+        padding: 3rem 2.5rem;
+        gap: 1.25rem;
+    }
+
+    .settings-panel {
+        gap: 0.75rem;
+    }
+
+    .settings-section {
+        padding: 1.25rem 1.5rem;
+        gap: 0.75rem;
+    }
+
+    .bottom-navbar {
+        height: 68px;
+    }
+
+    .nav-item i {
+        font-size: 1.4rem;
+    }
+
+    .nav-label {
+        font-size: 0.75rem;
+    }
+
+    /* On wide screens, nav labels always visible */
+    .nav-item {
+        gap: 5px;
+    }
+
+    .color-circle {
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* ── Large Desktop (≥ 1440px) ─────────────────────────────── */
+@media (min-width: 1440px) {
+    .settings-panel {
+        max-width: 720px;
+    }
+}
+
+/* ── Landscape mobile (short viewport) ───────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+    .top-header {
+        height: 44px;
+    }
+
+    .bottom-navbar {
+        height: 50px;
+    }
+
+    .nav-label {
+        display: none; /* hide labels to save vertical space */
+    }
+
+    .nav-item {
+        justify-content: center;
+    }
+
+    .padding-view {
+        padding: 0.75rem;
+    }
+
+    .upload-zone {
+        min-height: 160px;
+        padding: 1.25rem 1rem;
+    }
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .loading-bar {
+        animation: none;
+        width: 100%;
+    }
+
+    * {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
