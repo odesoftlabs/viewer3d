@@ -154,7 +154,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         engine.controls = new THREE.OrbitControls(engine.camera, engine.renderer.domElement);
         engine.controls.enableDamping = true;
+        engine.controls.dampingFactor = 0.08;
         engine.controls.autoRotate = true;
+        // Touch-friendly: allow two-finger pan and pinch-zoom
+        engine.controls.enablePan = true;
+        engine.controls.enableZoom = true;
+        engine.controls.touches = {
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_PAN
+        };
 
         engine.scene.add(new THREE.AmbientLight(0xffffff, 0.7));
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -170,14 +178,23 @@ document.addEventListener('DOMContentLoaded', () => {
             engine.renderer.render(engine.scene, engine.camera);
         }
         animate();
+
+        // Resize on window resize and orientation change
         window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            // Small delay lets the browser finish rotating before we measure
+            setTimeout(resizeCanvas, 150);
+        });
     }
 
     function resizeCanvas() {
         if (!engine.renderer) return;
-        engine.camera.aspect = container.clientWidth / container.clientHeight;
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        engine.camera.aspect = w / h;
         engine.camera.updateProjectionMatrix();
-        engine.renderer.setSize(container.clientWidth, container.clientHeight);
+        engine.renderer.setSize(w, h);
+        engine.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     }
 
     function updateEngineBackground(hex) { if (engine.scene) engine.scene.background = new THREE.Color(hex); }
@@ -189,60 +206,181 @@ document.addEventListener('DOMContentLoaded', () => {
     function processSelectedFile(file) {
         const MAX_SIZE = 200 * 1024 * 1024; // 200MB limit
         if (file.size > MAX_SIZE) {
-            alert('Error: File too large. Maximum size is 200MB.');
+            showError('Error: File too large. Maximum size is 200MB.');
             return;
         }
 
         const name = file.name;
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
         const extension = name.split('.').pop().toLowerCase();
-        const supported = ['glb', 'gltf', 'obj', 'fbx', 'stl', 'dae', 'ply'];
+        const supported = ['glb', 'gltf', 'obj'];
 
         if (!supported.includes(extension)) {
-            alert('Format not supported.');
+            showError(`Format ".${extension.toUpperCase()}" is not supported.\nSupported formats: .GLB, .GLTF, .OBJ`);
             return;
         }
 
         document.getElementById('stat-name-val').textContent = name;
         document.getElementById('stat-size-val').textContent = `${sizeMb} MB`;
         document.getElementById('stat-format-val').textContent = `.${extension.toUpperCase()}`;
-        
+
         const currentLang = document.querySelector('input[name="app-lang"]:checked').value;
         const statusEl = document.getElementById('stat-status-val');
-        statusEl.textContent = translations[currentLang]["status-loading"];
-        
+        statusEl.textContent = translations[currentLang]['status-loading'];
+
+        // Revoke any previous object URL to free memory
+        if (engine.currentObjectURL) {
+            URL.revokeObjectURL(engine.currentObjectURL);
+        }
         const readerURL = URL.createObjectURL(file);
-        if (engine.currentModel) engine.scene.remove(engine.currentModel);
+        engine.currentObjectURL = readerURL;
+
+        if (engine.currentModel) {
+            engine.scene.remove(engine.currentModel);
+            engine.currentModel = null;
+        }
         placeholder.classList.add('hidden');
+
+        function onLoadError(err) {
+            console.error('Model load error:', err);
+            statusEl.textContent = translations[currentLang]['status-error'];
+            placeholder.classList.remove('hidden');
+            showError('Failed to load model. The file may be corrupted or use unsupported features.');
+        }
 
         // Logic for loaders
         if (extension === 'glb' || extension === 'gltf') {
-            new THREE.GLTFLoader().load(readerURL, (gltf) => {
-                engine.currentModel = gltf.scene;
-                engine.scene.add(engine.currentModel);
-                postProcessingModel(engine.currentModel, currentLang);
-            });
+            new THREE.GLTFLoader().load(
+                readerURL,
+                (gltf) => {
+                    engine.currentModel = gltf.scene;
+                    engine.scene.add(engine.currentModel);
+                    postProcessingModel(engine.currentModel, currentLang);
+                },
+                undefined,
+                onLoadError
+            );
         } else if (extension === 'obj') {
-            new THREE.OBJLoader().load(readerURL, (obj) => {
-                engine.currentModel = obj;
-                engine.scene.add(engine.currentModel);
-                postProcessingModel(engine.currentModel, currentLang);
-            });
+            new THREE.OBJLoader().load(
+                readerURL,
+                (obj) => {
+                    engine.currentModel = obj;
+                    engine.scene.add(engine.currentModel);
+                    postProcessingModel(engine.currentModel, currentLang);
+                },
+                undefined,
+                onLoadError
+            );
         }
+
         document.querySelector('[data-target="view-inicio"]').click();
     }
 
-    // Handlers for Upload
+    function showError(message) {
+        // Use a non-blocking notification if possible, fall back to alert
+        console.error(message);
+        alert(message);
+    }
+
+    // Handlers for Upload — click and drag-and-drop
     const fileInput = document.getElementById('file-input');
     const dropZone = document.getElementById('drop-zone');
+
     dropZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => { if (e.target.files.length) processSelectedFile(e.target.files[0]); });
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) processSelectedFile(e.target.files[0]);
+        // Reset so the same file can be re-selected
+        e.target.value = '';
+    });
+
+    // Drag-and-drop support
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) processSelectedFile(file);
+    });
 
     function postProcessingModel(model, lang) {
-        document.getElementById('stat-status-val').textContent = translations[lang]["status-ready"];
+        const statusEl = document.getElementById('stat-status-val');
+        statusEl.textContent = translations[lang]['status-ready'];
+
+        // Compute bounding box and center the model
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
-        engine.controls.target.copy(center);
-        engine.camera.lookAt(center);
+        const size = box.getSize(new THREE.Vector3());
+
+        // Move model so its center sits at the world origin
+        model.position.sub(center);
+
+        // Fit camera to model — use the largest dimension to set distance
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fovRad = THREE.MathUtils.degToRad(engine.camera.fov);
+        let camDistance = (maxDim / 2) / Math.tan(fovRad / 2);
+        camDistance *= 1.6; // add breathing room
+
+        // Adjust for screen aspect: on narrow screens pull back a bit more
+        if (engine.camera.aspect < 1) camDistance *= (1 / engine.camera.aspect) * 0.75;
+
+        engine.camera.position.set(0, maxDim * 0.4, camDistance);
+        engine.controls.target.set(0, 0, 0);
+        engine.controls.update();
+
+        // Update stats
+        let vertices = 0, faces = 0, triangles = 0, materials = new Set(), textures = new Set();
+        model.traverse((child) => {
+            if (child.isMesh) {
+                const geo = child.geometry;
+                if (geo.attributes.position) vertices += geo.attributes.position.count;
+                if (geo.index) {
+                    triangles += geo.index.count / 3;
+                    faces += geo.index.count / 3;
+                } else if (geo.attributes.position) {
+                    triangles += geo.attributes.position.count / 3;
+                    faces += geo.attributes.position.count / 3;
+                }
+                if (child.material) {
+                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                    mats.forEach(m => {
+                        materials.add(m.uuid);
+                        if (m.map) textures.add(m.map.uuid);
+                        if (m.normalMap) textures.add(m.normalMap.uuid);
+                        if (m.roughnessMap) textures.add(m.roughnessMap.uuid);
+                        if (m.metalnessMap) textures.add(m.metalnessMap.uuid);
+                    });
+                }
+            }
+        });
+
+        document.getElementById('stat-vertices-val').textContent = vertices.toLocaleString();
+        document.getElementById('stat-faces-val').textContent = Math.round(faces).toLocaleString();
+        document.getElementById('stat-triangles-val').textContent = Math.round(triangles).toLocaleString();
+        document.getElementById('stat-materials-val').textContent = materials.size;
+        document.getElementById('stat-textures-val').textContent = textures.size;
     }
+
+    // PWA Install prompt
+    let deferredInstallPrompt = null;
+    const btnInstall = document.getElementById('btn-install-pwa');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        btnInstall.classList.remove('hidden');
+    });
+
+    btnInstall.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') btnInstall.classList.add('hidden');
+        deferredInstallPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => btnInstall.classList.add('hidden'));
 });
